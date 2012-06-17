@@ -41,6 +41,12 @@
 
 ;; _Or_ if you have package.el you could use `package-install-file'.
 
+;;; Customization:
+
+;; dispass.el only offers customization of the `dispass-executable'
+;; variable for the moment. This is the location where the dispass
+;; executable is located.
+
 ;;; Usage:
 
 ;; Using dispass.el is simple, once installed. Either call `dispass'
@@ -77,11 +83,23 @@
 ;;           numeric prefix argument.
 
 ;;         - Add `dispass-executable' which holds the location of the
-;;           dispass executable script.
+;;           dispass executable script. It can be changed through the
+;;           emacs customization interface.
+
+;;         - Add a customization group named dispass, it is found
+;;           under the "External" group.
 
 ;;; Code:
-(defvar dispass-executable "dispass"
-  "The location of the dispass executable")
+(defgroup dispass nil
+  "Customization options for the DisPass wrapper."
+  :group 'external)
+
+(defcustom dispass-executable "dispass"
+  "The location of the dispass executable."
+  :package-version '(dispass . "0.1a7.3")
+  :group 'dispass
+  :type '(string)
+  :risky t)
 
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."

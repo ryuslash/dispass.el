@@ -43,6 +43,13 @@ file, for example::
 
 *Or* if you have package.el you could use `package-install-file`.
 
+Customization
+==============================================================================
+
+`dispass.el` only offers customization of the `dispass-executable`
+variable for the moment. This is the location where the dispass
+executable is located.
+
 Usage
 ==============================================================================
 
