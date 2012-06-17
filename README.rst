@@ -53,6 +53,16 @@ to generate a new password.
 The only real difference between the two is that `dispass-create`
 asks to confirm the password. Both will ask for a label.
 
+When a numeric argument is used when calling either `dispass-create`
+or `dispass`, that argument is sent to the dispass program along with
+the `-l` switch. This cuts the length of the password to that many
+characters. For example::
+
+    C-5 M-x dispass<RET> test<RET> test<RET>
+
+will generate a password of 5 characters for label "test" and password
+"test".
+
 Once a password has been generated it is inserted into the kill
 ring and the system's clipboard so it can be easily inserted into
 password field, this makes the generated password easy to see in
