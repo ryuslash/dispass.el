@@ -214,6 +214,7 @@ an eye out for LABEL."
   (add-hook 'tabulated-list-revert-hook 'dispass-labels--refresh)
   (tabulated-list-init-header))
 
+;;;###autoload
 (defun dispass-list-labels ()
   "Display a list of labels for dispass."
   (interactive)
