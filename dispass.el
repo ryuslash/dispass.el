@@ -178,6 +178,11 @@ an eye out for LABEL."
   (dispass-start-process label nil length))
 
 ;; Labels management
+(defun dispass-from-button (button)
+  "Call dispass with information from BUTTON."
+  (dispass (button-get button 'dispass-label)
+           (button-get button 'dispass-length)))
+
 (defun dispass-labels--refresh ()
   "Reload labels from dispass."
   (setq tabulated-list-entries nil)
@@ -189,7 +194,13 @@ an eye out for LABEL."
               "\\(\\w+\\) .*length=\\([0-9]+\\) .*hash=\\(\\w+\\)$"
               nil t)
         (add-to-list 'tmp-list `(,(match-string 1)
-                                 [,(match-string 1)
+                                 [(,(match-string 1)
+                                   face link
+                                   help-echo ,(concat "Generate passphrase for " (match-string 1))
+                                   follow-link t
+                                   dispass-label ,(match-string 1)
+                                   dispass-length ,(match-string 2)
+                                   action dispass-from-button)
                                   ,(match-string 2)
                                   ,(match-string 3)]))))
     (setq tabulated-list-entries tmp-list)))
