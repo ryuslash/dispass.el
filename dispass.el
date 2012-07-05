@@ -97,6 +97,12 @@
   "Customization options for the DisPass wrapper."
   :group 'external)
 
+(defcustom dispass-default-length 30
+  "The default length to use when generating passphrases."
+  :package-version '(dispass . "1")
+  :group 'dispass
+  :type '(integer))
+
 (defcustom dispass-executable "dispass"
   "The location of the dispass executable."
   :package-version '(dispass . "0.1a7.3")
@@ -175,13 +181,15 @@ an eye out for LABEL."
 (defun dispass-create (label &optional length)
   (interactive "MLabel: \nP")
   "Create a new password for LABEL."
-  (dispass-start-process label t length))
+  (let ((length (or length dispass-default-length)))
+    (dispass-start-process label t length)))
 
 ;;;###autoload
 (defun dispass (label &optional length)
   (interactive "MLabel: \nP")
   "Recreate a password previously used."
-  (dispass-start-process label nil length))
+  (let ((length (or length dispass-default-length)))
+    (dispass-start-process label nil length)))
 
 ;; Labels management
 (defun dispass-from-button (button)
