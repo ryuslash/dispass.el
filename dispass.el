@@ -231,7 +231,7 @@ an eye out for LABEL."
       (dispass-labels-mode)
       (dispass-labels--refresh)
       (tabulated-list-print))
-    (display-buffer buffer))
+    (switch-to-buffer-other-window buffer))
   nil)
 
 (provide 'dispass)
