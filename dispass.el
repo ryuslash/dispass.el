@@ -113,7 +113,8 @@
 (defvar dispass-labels-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
-    (define-key map "c" 'dispass-create)))
+    (define-key map "c" 'dispass-create)
+    map))
 
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."
