@@ -120,6 +120,7 @@
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "c" 'dispass-create)
+    (define-key map "a" 'dispass-add-label)
     map))
 
 (defun dispass-process-sentinel (proc status)
@@ -182,7 +183,8 @@ an eye out for LABEL."
   (interactive "MLabel: \nP")
   "Create a new password for LABEL."
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process label t length)))
+    (dispass-start-process label t length)
+    (dispass-add-label label length "dispass1")))
 
 ;;;###autoload
 (defun dispass (label &optional length)
@@ -192,6 +194,15 @@ an eye out for LABEL."
     (dispass-start-process label nil length)))
 
 ;; Labels management
+;;;###autoload
+(defun dispass-add-label (label length hashtype)
+  (interactive "MLabel: \nnLength: \nMHash: ")
+  (with-temp-buffer
+    (insert (format "%s length=%d hash=%s\n" label length hashtype))
+    (append-to-file (point-min) (point-max) dispass-file))
+  (when (eq major-mode 'dispass-labels-mode)
+    (revert-buffer)))
+
 (defun dispass-from-button (button)
   "Call dispass with information from BUTTON."
   (dispass (button-get button 'dispass-label)
