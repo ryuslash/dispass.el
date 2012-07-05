@@ -110,6 +110,11 @@
   :group 'dispass
   :type '(file))
 
+(defvar dispass-labels-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map tabulated-list-mode-map)
+    (define-key map "c" 'dispass-create)))
+
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."
   (let ((status (substring status 0 -1))
@@ -206,7 +211,10 @@ an eye out for LABEL."
     (setq tabulated-list-entries tmp-list)))
 
 (define-derived-mode dispass-labels-mode tabulated-list-mode "DisPass"
-  "Major mode for listing dispass labels."
+  "Major mode for listing dispass labels.
+
+\\{dispass-labels-mode-map}"
+  (define-key dispass-labels-mode-map "c" 'dispass-create)
   (setq tabulated-list-format [("Label" 30 t)
                                ("Length" 6 nil)
                                ("Hash" 0 t)]
