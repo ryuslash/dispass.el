@@ -132,7 +132,7 @@
 an eye out for LABEL."
   `(lambda (proc string)
      "Process STRING coming from PROC."
-     (cond ((string-match "^\\(Password\\|Again\\): ?$" string)
+     (cond ((string-match "^\\(Password[^:]*\\|Again\\): ?$" string)
             (process-send-string proc
                                  (concat (read-passwd string nil) "\n")))
 
