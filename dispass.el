@@ -233,6 +233,7 @@ an eye out for LABEL."
 (define-derived-mode dispass-labels-mode tabulated-list-mode "DisPass"
   "Major mode for listing dispass labels.
 
+\\<dispass-labels-mode-map>
 \\{dispass-labels-mode-map}"
   (define-key dispass-labels-mode-map "c" 'dispass-create)
   (setq tabulated-list-format [("Label" 30 t)
