@@ -1,0 +1,56 @@
+* dispass.el Emacs wrapper
+
+  Generate and disperse/dispell passwords.
+
+  ~dispass.el~ is an emacs wrapper around [[http://dispass.babab.nl][DisPass]].
+
+** Installation
+
+   Place this file somewhere on your filesystem, either in your
+   ~load-path~ or somewhere else which you will have to add to your
+   ~load-path~, like so:
+
+   #+begin_src emacs-lisp
+     (add-to-list 'load-path "/location/of/dispass.el")
+   #+end_src
+
+   And then ~load~, ~require~ or ~autoload~ it in your emacs init file, for
+   example:
+
+   #+begin_src emacs-lisp
+     (require 'dispass)
+   #+end_src
+
+   /Or/ if you have ~package.el~ you could use ~package-install-file~.
+
+** Customization
+
+   ~dispass.el~ only offers customization of the ~dispass-executable~
+   variable for the moment. This is the location where the DisPass
+   executable is located.
+
+** Usage
+
+   Using dispass.el is simple, once installed. Either call =dispass= to
+   recall a previously generated password or call =dispass-create= to
+   generate a new password.
+
+   The only real difference between the two is that =dispass-create=
+   asks to confirm the password. Both will ask for a label.
+
+   When a numeric argument is used when calling either =dispass-create=
+   or =dispass=, that argument is sent to the dispass program along with
+   the ~-l~ switch. This cuts the length of the password to that many
+   characters. For example:
+
+   #+begin_example
+     C-5 M-x dispass<RET> test<RET> test<RET>
+   #+end_example
+
+   will generate a password of 5 characters for label "test" and
+   password "test".
+
+   Once a password has been generated it is inserted into the kill
+   ring and the system's clipboard so it can be easily inserted into
+   password field, this makes the generated password easy to see in
+   plaintext in the =kill-ring= variable, though.
