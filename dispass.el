@@ -121,6 +121,7 @@
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "c" 'dispass-create)
     (define-key map "a" 'dispass-add-label)
+    (define-key map "d" 'dispass-remove-label)
     map))
 
 (defun dispass-process-sentinel (proc status)
@@ -202,6 +203,23 @@ an eye out for LABEL."
     (append-to-file (point-min) (point-max) dispass-file))
   (when (eq major-mode 'dispass-labels-mode)
     (revert-buffer)))
+
+(defun dispass-remove-label (&optional label)
+  (interactive)
+  (let* ((labels-mode-p (eq major-mode 'dispass-labels-mode))
+         (label (or label (when labels-mode-p (tabulated-list-get-id)))))
+    (unless label
+      (error
+       "LABEL required or must be called from `dispass-labels-mode'."))
+
+    (with-temp-buffer
+      (insert-file-contents dispass-file)
+      (re-search-forward (concat "^" label))
+      (kill-whole-line)
+      (write-file dispass-file))
+
+    (when labels-mode-p
+      (revert-buffer))))
 
 (defun dispass-from-button (button)
   "Call dispass with information from BUTTON."
