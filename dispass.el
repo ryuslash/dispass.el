@@ -214,9 +214,9 @@ an eye out for LABEL."
 
     (with-temp-buffer
       (insert-file-contents dispass-file)
-      (re-search-forward (concat "^" label))
-      (kill-whole-line)
-      (write-file dispass-file))
+      (when (re-search-forward (concat "^" label) nil t)
+        (kill-whole-line)
+        (write-file dispass-file)))
 
     (when labels-mode-p
       (revert-buffer))))
