@@ -133,7 +133,9 @@
     (define-key map "c" 'dispass-create)
     (define-key map "a" 'dispass-add-label)
     (define-key map "d" 'dispass-remove-label)
-    map))
+    map)
+  "Keymap for `dispass-labels-mode', uses
+  `tabulated-list-mode-map' as its parent.")
 
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."
@@ -192,22 +194,23 @@ an eye out for LABEL."
 
 ;;;###autoload
 (defun dispass-create (label &optional length)
-  (interactive "MLabel: \nP")
   "Create a new password for LABEL."
+  (interactive "MLabel: \nP")
   (let ((length (or length dispass-default-length)))
     (dispass-start-process label t length)
     (dispass-add-label label length "dispass1")))
 
 ;;;###autoload
 (defun dispass (label &optional length)
-  (interactive "MLabel: \nP")
   "Recreate a password previously used."
+  (interactive "MLabel: \nP")
   (let ((length (or length dispass-default-length)))
     (dispass-start-process label nil length)))
 
 ;; Labels management
 ;;;###autoload
 (defun dispass-add-label (label length hashtype)
+  "Add LABEL with length LENGTH and hashtype HASHTYPE to `dispass-file'."
   (interactive "MLabel: \nnLength: \nMHash: ")
   (with-temp-buffer
     (insert (format "%s length=%d hash=%s\n" label length hashtype))
@@ -216,6 +219,10 @@ an eye out for LABEL."
     (revert-buffer)))
 
 (defun dispass-remove-label (&optional label)
+  "Remove LABEL from `dispass-file', if LABEL is not given
+`tabulated-list-get-id' will be used to get the currently
+pointed-at label. If neither LABEL is not found an error is
+thrown."
   (interactive)
   (let* ((labels-mode-p (eq major-mode 'dispass-labels-mode))
          (label (or label (when labels-mode-p (tabulated-list-get-id)))))
