@@ -271,7 +271,6 @@ thrown."
 
 \\<dispass-labels-mode-map>
 \\{dispass-labels-mode-map}"
-  (define-key dispass-labels-mode-map "c" 'dispass-create)
   (setq tabulated-list-format [("Label" 30 t)
                                ("Length" 6 nil)
                                ("Hash" 0 t)]
