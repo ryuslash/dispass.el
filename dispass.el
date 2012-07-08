@@ -5,7 +5,7 @@
 ;; Author: Tom Willemsen <tom@ryuslash.org>
 ;; Created: Jun 8, 2012
 ;; Version: 1
-;; Keywords: encryption, security
+;; Keywords: processes
 
 ;; Permission to use, copy, modify, and distribute this software for any
 ;; purpose with or without fee is hereby granted, provided that the
