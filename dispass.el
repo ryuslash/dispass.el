@@ -90,7 +90,18 @@
 ;;           under the "External" group.
 
 ;; 1 - Add `dispass-list-labels' which shows a list of all the labels
-;;     in `dispass-file'.
+;;     in `dispass-file'.  Some management of labels is possible in
+;;     this list, namely adding and deleting labels.
+
+;;   - `dispass-create' will automatically add "created" labels to
+;;     `dispass-file'.
+
+;;   - Store a default length in `dispass-default-length'. When no
+;;     length is given or found in the labels file, this length will
+;;     be passed on to DisPass.
+
+;;   - Fix the regular expression used in `dispass-process-filter-for'
+;;     to support DisPass v0.1a8.
 
 ;;; Code:
 (defgroup dispass nil
