@@ -216,7 +216,7 @@ an eye out for LABEL."
     (with-temp-buffer
       (insert-file-contents dispass-file)
       (while (re-search-forward
-              "\\(\\w+\\) .*length=\\([0-9]+\\) .*hash=\\(\\w+\\)$"
+              "\\(\\(?:\\sw\\|\\s_\\)+\\) .*length=\\([0-9]+\\) .*hash=\\(\\sw+\\)$"
               nil t)
         (add-to-list 'tmp-list `(,(match-string 1)
                                  [(,(match-string 1)
