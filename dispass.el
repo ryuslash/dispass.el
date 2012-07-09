@@ -6,6 +6,7 @@
 ;; Created: Jun 8, 2012
 ;; Version: 1
 ;; Keywords: processes
+;; URL: http://ryuslash.org/projects/dispass.el.html
 
 ;; Permission to use, copy, modify, and distribute this software for any
 ;; purpose with or without fee is hereby granted, provided that the
