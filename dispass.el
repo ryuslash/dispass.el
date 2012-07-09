@@ -4,8 +4,8 @@
 
 ;; Author: Tom Willemsen <tom@ryuslash.org>
 ;; Created: Jun 8, 2012
-;; Version: 0.1a7.3
-;; Keywords: encryption, security
+;; Version: 1
+;; Keywords: processes
 
 ;; Permission to use, copy, modify, and distribute this software for any
 ;; purpose with or without fee is hereby granted, provided that the
@@ -44,22 +44,22 @@
 ;;; Customization:
 
 ;; dispass.el only offers customization of the `dispass-executable'
-;; variable for the moment. This is the location where the dispass
-;; executable is located.
+;; and `dispass-file' variables for the moment.  This is the location
+;; where the dispass executable is located.
 
 ;;; Usage:
 
-;; Using dispass.el is simple, once installed. Either call `dispass'
+;; Using dispass.el is simple, once installed.  Either call `dispass'
 ;; to recall a priviously generated password or call `dispass-create'
 ;; to generate a new password.
 
 ;; The only real difference between the two is that `dispass-create'
-;; asks to confirm the password. Both will ask for a label.
+;; asks to confirm the password.  Both will ask for a label.
 
 ;; When a numeric argument is used when calling either
 ;; `dispass-create' or `dispass', that argument is sent to the dispass
-;; program along with the -l switch. This cuts the length of the
-;; password to that many characters. For example:
+;; program along with the -l switch.  This cuts the length of the
+;; password to that many characters.  For example:
 
 ;;     C-5 M-x dispass<RET>
 
@@ -83,16 +83,36 @@
 ;;           numeric prefix argument.
 
 ;;         - Add `dispass-executable' which holds the location of the
-;;           dispass executable script. It can be changed through the
+;;           dispass executable script.  It can be changed through the
 ;;           emacs customization interface.
 
 ;;         - Add a customization group named dispass, it is found
 ;;           under the "External" group.
 
+;; 1 - Add `dispass-list-labels' which shows a list of all the labels
+;;     in `dispass-file'.  Some management of labels is possible in
+;;     this list, namely adding and deleting labels.
+
+;;   - `dispass-create' will automatically add "created" labels to
+;;     `dispass-file'.
+
+;;   - Store a default length in `dispass-default-length'. When no
+;;     length is given or found in the labels file, this length will
+;;     be passed on to DisPass.
+
+;;   - Fix the regular expression used in `dispass-process-filter-for'
+;;     to support DisPass v0.1a8.
+
 ;;; Code:
 (defgroup dispass nil
   "Customization options for the DisPass wrapper."
   :group 'external)
+
+(defcustom dispass-default-length 30
+  "The default length to use when generating passphrases."
+  :package-version '(dispass . "1")
+  :group 'dispass
+  :type '(integer))
 
 (defcustom dispass-executable "dispass"
   "The location of the dispass executable."
@@ -100,6 +120,22 @@
   :group 'dispass
   :type '(string)
   :risky t)
+
+(defcustom dispass-file "~/.dispass"
+  "The location of your dispass file."
+  :package-version '(dispass . "1")
+  :group 'dispass
+  :type '(file))
+
+(defvar dispass-labels-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map tabulated-list-mode-map)
+    (define-key map "c" 'dispass-create)
+    (define-key map "a" 'dispass-add-label)
+    (define-key map "d" 'dispass-remove-label)
+    map)
+  "Keymap for `dispass-labels-mode', uses
+  `tabulated-list-mode-map' as its parent.")
 
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."
@@ -123,7 +159,7 @@
 an eye out for LABEL."
   `(lambda (proc string)
      "Process STRING coming from PROC."
-     (cond ((string-match "^\\(Password\\|Again\\): ?$" string)
+     (cond ((string-match "^\\(Password[^:]*\\|Again\\): ?$" string)
             (process-send-string proc
                                  (concat (read-passwd string nil) "\n")))
 
@@ -139,8 +175,8 @@ an eye out for LABEL."
                   (kill-buffer buffer))))))))
 
 (defun dispass-start-process (label create length)
-  "Start dispass process. When CREATE is non-nil send along the
-  -c switch to make it ask for a password twice. When LENGTH is
+  "Start dispass process.  When CREATE is non-nil send along the
+  -c switch to make it ask for a password twice.  When LENGTH is
   an integer and greater than 0, send along the -l switch with
   LENGTH."
   (let ((args `("-o" ,label))
@@ -158,15 +194,106 @@ an eye out for LABEL."
 
 ;;;###autoload
 (defun dispass-create (label &optional length)
-  (interactive "MLabel: \nP")
   "Create a new password for LABEL."
-  (dispass-start-process label t length))
+  (interactive "MLabel: \nP")
+  (let ((length (or length dispass-default-length)))
+    (dispass-start-process label t length)
+    (dispass-add-label label length "dispass1")))
 
 ;;;###autoload
 (defun dispass (label &optional length)
-  (interactive "MLabel: \nP")
   "Recreate a password previously used."
-  (dispass-start-process label nil length))
+  (interactive "MLabel: \nP")
+  (let ((length (or length dispass-default-length)))
+    (dispass-start-process label nil length)))
+
+;; Labels management
+;;;###autoload
+(defun dispass-add-label (label length hashtype)
+  "Add LABEL with length LENGTH and hashtype HASHTYPE to `dispass-file'."
+  (interactive "MLabel: \nnLength: \nMHash: ")
+  (with-temp-buffer
+    (insert (format "%s length=%d hash=%s\n" label length hashtype))
+    (append-to-file (point-min) (point-max) dispass-file))
+  (when (eq major-mode 'dispass-labels-mode)
+    (revert-buffer)))
+
+(defun dispass-remove-label (&optional label)
+  "Remove LABEL from `dispass-file', if LABEL is not given
+`tabulated-list-get-id' will be used to get the currently
+pointed-at label. If neither LABEL is not found an error is
+thrown."
+  (interactive)
+  (let* ((labels-mode-p (eq major-mode 'dispass-labels-mode))
+         (label (or label (when labels-mode-p (tabulated-list-get-id)))))
+    (unless label
+      (error
+       "LABEL required or must be called from `dispass-labels-mode'."))
+
+    (with-temp-buffer
+      (insert-file-contents dispass-file)
+      (when (re-search-forward (concat "^" label) nil t)
+        (kill-whole-line)
+        (write-file dispass-file)))
+
+    (when labels-mode-p
+      (revert-buffer))))
+
+(defun dispass-from-button (button)
+  "Call dispass with information from BUTTON."
+  (dispass (button-get button 'dispass-label)
+           (button-get button 'dispass-length)))
+
+(defun dispass-labels--refresh ()
+  "Reload labels from dispass."
+  (setq tabulated-list-entries nil)
+
+  (let ((tmp-list '()))
+    (with-temp-buffer
+      (insert-file-contents dispass-file)
+      (while (re-search-forward
+              "\\(\\(?:\\sw\\|\\s_\\)+\\) .*length=\\([0-9]+\\) .*hash=\\(\\sw+\\)$"
+              nil t)
+        (let ((label (match-string 1))
+              (length (match-string 2))
+              (hashmethod (match-string 3)))
+          (add-to-list 'tmp-list
+                       `(,label
+                         [(,label
+                           face link
+                           help-echo ,(concat "Generate passphrase for "
+                                              label)
+                           follow-link t
+                           dispass-label ,label
+                           dispass-length ,length
+                           action dispass-from-button)
+                          ,length
+                          ,hashmethod])))))
+    (setq tabulated-list-entries tmp-list)))
+
+(define-derived-mode dispass-labels-mode tabulated-list-mode "DisPass"
+  "Major mode for listing dispass labels.
+
+\\<dispass-labels-mode-map>
+\\{dispass-labels-mode-map}"
+  (setq tabulated-list-format [("Label" 30 t)
+                               ("Length" 6 nil)
+                               ("Hash" 0 t)]
+        tabulated-list-sort-key '("Label" . nil))
+  (add-hook 'tabulated-list-revert-hook 'dispass-labels--refresh)
+  (tabulated-list-init-header))
+
+;;;###autoload
+(defun dispass-list-labels ()
+  "Display a list of labels for dispass."
+  (interactive)
+  (let ((buffer (get-buffer-create "*DisPass Labels*")))
+    (with-current-buffer buffer
+      (dispass-labels-mode)
+      (dispass-labels--refresh)
+      (tabulated-list-print))
+    (switch-to-buffer-other-window buffer))
+  nil)
 
 (provide 'dispass)
 
