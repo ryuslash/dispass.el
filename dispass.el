@@ -4,7 +4,7 @@
 
 ;; Author: Tom Willemsen <tom@ryuslash.org>
 ;; Created: Jun 8, 2012
-;; Version: 1
+;; Version: 1.1
 ;; Keywords: processes
 ;; URL: http://ryuslash.org/projects/dispass.el.html
 
@@ -104,6 +104,10 @@
 ;;   - Fix the regular expression used in `dispass-process-filter-for'
 ;;     to support DisPass v0.1a8.
 
+;; 1.1 - Use `dispass-label' to get a list of labels the user has
+;;       made, use this for `dispass-list-labels' and adding
+;;       completion options for `dispass'.
+
 ;;; Code:
 (defgroup dispass nil
   "Customization options for the DisPass wrapper."
@@ -120,6 +124,13 @@
   :package-version '(dispass . "0.1a7.3")
   :group 'dispass
   :type '(string)
+  :risky t)
+
+(defcustom dispass-labels-executable "dispass-label"
+  "The location of the dispass-label executable."
+  :package-version '(dispass . "1.1")
+  :group 'dispass
+  :type 'string
   :risky t)
 
 (defcustom dispass-file "~/.dispass"
@@ -193,6 +204,32 @@ an eye out for LABEL."
     (set-process-sentinel proc 'dispass-process-sentinel)
     (set-process-filter proc (dispass-process-filter-for label))))
 
+(defun dispass-get-labels ()
+  "Get the list of labels and their information."
+  (let ((result '()))
+    (with-temp-buffer
+      (shell-command (concat dispass-labels-executable
+                             " -l --script")
+                     (current-buffer))
+      (while (re-search-forward
+              "^\\(\\(?:\\sw\\|\\s_\\)+\\) +\\([0-9]+\\) +\\(\\(?:\\sw\\|\\s_\\)+\\)"
+              nil t)
+        (let ((label (match-string 1))
+              (length (match-string 2))
+              (hashmethod (match-string 3)))
+          (add-to-list 'result
+                       (list label
+                          `[(,label
+                             face link
+                             help-echo ,(concat "Generate passphrase for " label)
+                             follow-link t
+                             dispass-label ,label
+                             dispass-length ,length
+                             action dispass-from-button)
+                            ,length
+                            ,hashmethod])))))
+    result))
+
 ;;;###autoload
 (defun dispass-create (label &optional length)
   "Create a new password for LABEL."
@@ -204,7 +241,11 @@ an eye out for LABEL."
 ;;;###autoload
 (defun dispass (label &optional length)
   "Recreate a password previously used."
-  (interactive "MLabel: \nP")
+  (interactive (list
+                (completing-read
+                 "Label: " (mapcar (lambda (elm) (elt elm 0))
+                                   (dispass-get-labels)))
+                current-prefix-arg))
   (let ((length (or length dispass-default-length)))
     (dispass-start-process label nil length)))
 
@@ -250,27 +291,7 @@ thrown."
   (setq tabulated-list-entries nil)
 
   (let ((tmp-list '()))
-    (with-temp-buffer
-      (insert-file-contents dispass-file)
-      (while (re-search-forward
-              "\\(\\(?:\\sw\\|\\s_\\)+\\) .*length=\\([0-9]+\\) .*hash=\\(\\sw+\\)$"
-              nil t)
-        (let ((label (match-string 1))
-              (length (match-string 2))
-              (hashmethod (match-string 3)))
-          (add-to-list 'tmp-list
-                       `(,label
-                         [(,label
-                           face link
-                           help-echo ,(concat "Generate passphrase for "
-                                              label)
-                           follow-link t
-                           dispass-label ,label
-                           dispass-length ,length
-                           action dispass-from-button)
-                          ,length
-                          ,hashmethod])))))
-    (setq tabulated-list-entries tmp-list)))
+    (setq tabulated-list-entries (dispass-get-labels))))
 
 (define-derived-mode dispass-labels-mode tabulated-list-mode "DisPass"
   "Major mode for listing dispass labels.
