@@ -185,10 +185,7 @@ an eye out for LABEL."
               (with-current-buffer buffer
                 (insert (match-string 1 string))
                 (clipboard-kill-ring-save (point-min) (point-max))
-                (message "Password copied to clipboard.")
-
-                (unless (eq (process-status proc) 'run)
-                  (kill-buffer buffer))))))))
+                (message "Password copied to clipboard.")))))))
 
 (defun dispass-start-process (label create length)
   "Start dispass process.  When CREATE is non-nil send along the
