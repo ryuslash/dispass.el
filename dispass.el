@@ -236,8 +236,7 @@ an eye out for LABEL."
   "Create a new password for LABEL."
   (interactive "MLabel: \nP")
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process label t length)
-    (dispass-add-label label length "dispass1")))
+    (dispass-start-process label t length)))
 
 ;;;###autoload
 (defun dispass (label &optional length)
