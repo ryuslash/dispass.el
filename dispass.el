@@ -209,9 +209,9 @@ an eye out for LABEL."
   "Get the list of labels and their information."
   (let ((result '()))
     (with-temp-buffer
-      (shell-command (concat dispass-labels-executable
-                             " -l --script")
-                     (current-buffer))
+      (insert (shell-command-to-string
+               (concat dispass-labels-executable " -l --script")))
+      (goto-char (point-min))
       (while (re-search-forward
               "^\\(\\(?:\\sw\\|\\s_\\)+\\) +\\([0-9]+\\) +\\(\\(?:\\sw\\|\\s_\\)+\\)"
               nil t)
