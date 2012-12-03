@@ -4,7 +4,7 @@
 
 ;; Author: Tom Willemsen <tom@ryuslash.org>
 ;; Created: Jun 8, 2012
-;; Version: 1.1
+;; Version: 1.1.1
 ;; Keywords: processes
 ;; URL: http://ryuslash.org/projects/dispass.el.html
 
@@ -107,6 +107,18 @@
 ;; 1.1 - Use `dispass-label' to get a list of labels the user has
 ;;       made, use this for `dispass-list-labels' and adding
 ;;       completion options for `dispass'.
+
+;; 1.1.1 - Clean up the output from dispass when prompting, trim
+;;         whitespace from the front and end of the prompt.
+
+;;       - Don't have the filter try and kill the buffer, since the
+;;         sentinal should handle this.
+
+;;       - Don't call `dispass-add-label' in `dispass-create'.  Let
+;;         DisPass handle it.
+
+;;       - Use `shell-command-to-string' in combination with `insert'
+;;         to prevent a random window from being opened.
 
 ;;; Code:
 (defgroup dispass nil
