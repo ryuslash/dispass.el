@@ -112,7 +112,7 @@
 ;;         whitespace from the front and end of the prompt.
 
 ;;       - Don't have the filter try and kill the buffer, since the
-;;         sentinal should handle this.
+;;         sentinel should handle this.
 
 ;;       - Don't call `dispass-add-label' in `dispass-create'.  Let
 ;;         DisPass handle it.
