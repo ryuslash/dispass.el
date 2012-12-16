@@ -1,0 +1,61 @@
+# -*- mode: org; -*-
+
+* Changes in v1.1.1
+
+  - Clean up the output from DisPass when prompting, trim whitespace
+    from the front and end of the prompt.
+
+  - Don't have the filter try and kill the bufer, the sentinel should
+    handle this.
+
+  - Don't call ~dispass-add-label~ in ~dispass-cerate~, let DisPass
+    handle this.
+
+  - Fix a bug that would cause a new window to be created each time
+    the dispass.el completion was built.
+
+* Changes in v1.1
+
+  - Use ~dispass-label~ to get a list of labels the user has maed, use
+    this for ~dispass-list-labels~ and adding completion options for
+    ~dispass~.
+
+* Changes in v1
+
+  - Add the ~dispass-list-labels~ command, which shows a list of all
+    the labels in ~dispass-file~.  Some management of labels is
+    possible in this list, namely adding and deleting labels.
+
+  - ~dispass-create~ automatically adds "created" labels to
+    ~dispass-file~.
+
+  - Store a default length in ~dispass-default-length~.  When no length
+    is given or found in the labels file, this length will be passed
+    on to DisPass.
+
+  - Fix the regular expression used in ~dispass-process-filter-for~ to
+    support DisPass v0.1a8.
+
+* Changes in v0.1a7.3
+
+  - Add the possibility to cut passwords short by using a numeric
+    prefix argument.
+
+  - Add the ~dispass-executable~ option, which holds the location of the
+    DisPass executable script.  It can be changed through the Emacs
+    customization interface.
+
+  - Add a customization group named ~dispass~, it is found under the
+    ~External~ group.
+
+* Changes in v0.1a7.2
+
+  - Kill the buffer when we're winished with it.
+
+* Changes in v0.1a7.1
+
+  - Don's show the password, copy it directly into the clipboard.
+
+* Notes about v0.1a7
+
+  - Initial release
