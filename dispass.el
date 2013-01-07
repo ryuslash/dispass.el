@@ -1,4 +1,4 @@
-;;; dispass.el --- Generate and disperse/dispell passwords
+;;; dispass.el --- Emacs wrapper for DisPass
 
 ;; Copyright (C) 2012 Tom Willemsen <tom@ryuslash.org>
 

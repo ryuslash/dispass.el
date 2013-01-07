@@ -1,5 +1,10 @@
 # -*- mode: org; -*-
 
+* Changes since
+
+  - Change the description to emphasize the idea that ~dispass.el~ is
+    only a wrapper around DisPass.
+
 * Changes in v1.1.1
 
   - Clean up the output from DisPass when prompting, trim whitespace
