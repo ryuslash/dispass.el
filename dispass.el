@@ -53,12 +53,6 @@
   :type 'string
   :risky t)
 
-(defcustom dispass-file "~/.dispass"
-  "The location of your dispass file."
-  :package-version '(dispass . "1")
-  :group 'dispass
-  :type '(file))
-
 (defvar dispass-labels-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
@@ -85,6 +79,11 @@
     (set-buffer buffer)
     (buffer-disable-undo buffer)
     (kill-buffer buffer)))
+
+(defun dispass-label-at-point ()
+  "When in `dispass-labels-mode', get the label at `point'."
+  (let ((labels-mode-p (eq major-mode 'dispass-labels-mode)))
+    (tabulated-list-get-id)))
 
 (defun dispass-process-filter-for (label)
   "Create a function that will process any lines whilst keeping
@@ -172,34 +171,32 @@ an eye out for LABEL."
 ;; Labels management
 ;;;###autoload
 (defun dispass-add-label (label length hashtype)
-  "Add LABEL with length LENGTH and hashtype HASHTYPE to `dispass-file'."
-  (interactive "MLabel: \nnLength: \nMHash: ")
-  (with-temp-buffer
-    (insert (format "%s length=%d hash=%s\n" label length hashtype))
-    (append-to-file (point-min) (point-max) dispass-file))
-  (when (eq major-mode 'dispass-labels-mode)
-    (revert-buffer)))
+  "Add LABEL with length LENGTH and hashtype HASHTYPE to DisPass."
+  (interactive
+   (list (read-from-minibuffer "Label: ")
+         (read-from-minibuffer
+          (format "Length (%d): " dispass-default-length) nil nil t nil
+          (number-to-string dispass-default-length))
+         (symbol-name (read-from-minibuffer
+                       "Algorithm (dispass1): " nil nil t nil "dispass1"))))
+  (shell-command
+   (format "%s --add %s:%d:%s" dispass-labels-executable label length
+           hashtype)))
 
-(defun dispass-remove-label (&optional label)
-  "Remove LABEL from `dispass-file', if LABEL is not given
+;;;###autoload
+(defun dispass-remove-label (label)
+  "Remove LABEL from DisPass, if LABEL is not given
 `tabulated-list-get-id' will be used to get the currently
 pointed-at label. If neither LABEL is not found an error is
 thrown."
-  (interactive)
-  (let* ((labels-mode-p (eq major-mode 'dispass-labels-mode))
-         (label (or label (when labels-mode-p (tabulated-list-get-id)))))
-    (unless label
-      (error
-       "LABEL required or must be called from `dispass-labels-mode'."))
+  (interactive
+   (list (or (dispass-label-at-point)
+             (completing-read
+              "Label: " (mapcar (lambda (elm) (elt elm 0))
+                                (dispass-get-labels))))))
 
-    (with-temp-buffer
-      (insert-file-contents dispass-file)
-      (when (re-search-forward (concat "^" label) nil t)
-        (kill-whole-line)
-        (write-file dispass-file)))
-
-    (when labels-mode-p
-      (revert-buffer))))
+  (shell-command
+   (format "%s --remove %s" dispass-labels-executable label)))
 
 (defun dispass-from-button (button)
   "Call dispass with information from BUTTON."
