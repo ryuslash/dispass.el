@@ -136,7 +136,7 @@ an eye out for LABEL."
               nil t)
         (let ((label (match-string 1))
               (length (match-string 2))
-              (hashmethod (match-string 3)))
+              (algo (match-string 3)))
           (add-to-list 'result
                        (list label
                           `[(,label
@@ -147,7 +147,7 @@ an eye out for LABEL."
                              dispass-length ,length
                              action dispass-from-button)
                             ,length
-                            ,hashmethod])))))
+                            ,algo])))))
     result))
 
 ;;;###autoload
@@ -170,8 +170,8 @@ an eye out for LABEL."
 
 ;; Labels management
 ;;;###autoload
-(defun dispass-add-label (label length hashtype)
-  "Add LABEL with length LENGTH and hashtype HASHTYPE to DisPass."
+(defun dispass-add-label (label length algo)
+  "Add LABEL with length LENGTH and algorithm ALGO to DisPass."
   (interactive
    (list (read-from-minibuffer "Label: ")
          (read-from-minibuffer
@@ -180,8 +180,7 @@ an eye out for LABEL."
          (symbol-name (read-from-minibuffer
                        "Algorithm (dispass1): " nil nil t nil "dispass1"))))
   (shell-command
-   (format "%s --add %s:%d:%s" dispass-labels-executable label length
-           hashtype)))
+   (format "%s --add %s:%d:%s" dispass-labels-executable label length algo)))
 
 ;;;###autoload
 (defun dispass-remove-label (label)
@@ -217,7 +216,7 @@ thrown."
 \\{dispass-labels-mode-map}"
   (setq tabulated-list-format [("Label" 30 t)
                                ("Length" 6 nil)
-                               ("Hash" 0 t)]
+                               ("Algorithm" 0 t)]
         tabulated-list-sort-key '("Label" . nil))
   (add-hook 'tabulated-list-revert-hook 'dispass-labels--refresh)
   (tabulated-list-init-header))
