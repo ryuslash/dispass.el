@@ -5,6 +5,9 @@
   - Change the description to emphasize the idea that ~dispass.el~ is
     only a wrapper around DisPass.
 
+  - Simplify ~dispass-add-label~ and ~dispass-remove-label~ by deferring
+    their functionality to the ~dispass-label~ executable.
+
 * Changes in v1.1.1
 
   - Clean up the output from DisPass when prompting, trim whitespace
@@ -13,7 +16,7 @@
   - Don't have the filter try and kill the bufer, the sentinel should
     handle this.
 
-  - Don't call ~dispass-add-label~ in ~dispass-cerate~, let DisPass
+  - Don't call ~dispass-add-label~ in ~dispass-create~, let DisPass
     handle this.
 
   - Fix a bug that would cause a new window to be created each time
