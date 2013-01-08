@@ -1,3 +1,5 @@
+#+STARTUP: showall
+
 * dispass.el
 
   Generate and disperse/dispell passwords.
@@ -39,8 +41,6 @@
 
    - =dispass-labels-executable= :: The place where the ~dispass-labels~
         executable script is located.
-
-   - ~dispass-file~ :: The location of your DisPass label file.
 
 ** Usage
 
@@ -85,7 +85,7 @@
 
 * Footnotes
 
-  [fn:1] There is no requirement to first call ~dispass-create~ before
-  using ~dispass~, but the former asks for confirmation of the password
-  and newer version of DisPass will automatically store the label and
-  its meta-data (such as length) in your labels file.
+[fn:1] There is no requirement to first call ~dispass-create~ before
+using ~dispass~, but the former asks for confirmation of the password
+and newer version of DisPass will automatically store the label and
+its meta-data (such as length) in your labels file.
