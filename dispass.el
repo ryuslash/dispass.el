@@ -63,6 +63,11 @@
   "Keymap for `dispass-labels-mode', uses
   `tabulated-list-mode-map' as its parent.")
 
+(defconst dispass-algorithms
+  '("dispass1" "dispass2")
+  "The list of algorithms supported by DisPass, this should be
+  extracted from DisPass at some point.")
+
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."
   (let ((status (substring status 0 -1))
@@ -106,18 +111,22 @@ an eye out for LABEL."
                 (clipboard-kill-ring-save (point-min) (point-max))
                 (message "Password copied to clipboard.")))))))
 
-(defun dispass-start-process (label create length)
+(defun dispass-start-process (label create length &optional algo args)
   "Start dispass process.  When CREATE is non-nil send along the
   -c switch to make it ask for a password twice.  When LENGTH is
   an integer and greater than 0, send along the -l switch with
   LENGTH."
-  (let ((args `("-o" ,label))
+  (let ((args `("-o" ,@args ,label))
         proc)
     (when create
       (setq args (append '("-c") args)))
 
     (when (and (integerp length) (> length 0))
       (setq args (append `("-l" ,(number-to-string length)) args)))
+
+    (when (and algo (not (equal algo ""))
+               (member algo dispass-algorithms))
+      (setq args (append `("-a" ,algo) args)))
 
     (setq proc (apply 'start-process "dispass" "*dispass*"
                       dispass-executable args))
@@ -128,9 +137,18 @@ an eye out for LABEL."
   "Get the list of labels and their information."
   (let ((result '()))
     (with-temp-buffer
-      (insert (shell-command-to-string
-               (concat dispass-labels-executable " -l --script")))
-      (goto-char (point-min))
+      (dispass-read-labels)
+      (while (re-search-forward
+              "^\\(\\(?:\\sw\\|\\s_\\)+\\)"
+              nil t)
+        (add-to-list 'result (match-string 1)))
+      result)))
+
+(defun dispass-get-labels-for-display ()
+  "Prepare the list of labels for info table."
+  (let ((result '()))
+    (with-temp-buffer
+      (dispass-read-labels)
       (while (re-search-forward
               "^\\(\\(?:\\sw\\|\\s_\\)+\\) +\\([0-9]+\\) +\\(\\(?:\\sw\\|\\s_\\)+\\)"
               nil t)
@@ -150,23 +168,37 @@ an eye out for LABEL."
                             ,algo])))))
     result))
 
-;;;###autoload
-(defun dispass-create (label &optional length)
-  "Create a new password for LABEL."
-  (interactive "MLabel: \nP")
-  (let ((length (or length dispass-default-length)))
-    (dispass-start-process label t length)))
+(defun dispass-read-labels ()
+  "Load a list of all labels into a buffer."
+  (insert (shell-command-to-string
+           (concat dispass-labels-executable " -l --script")))
+  (goto-char (point-min)))
 
 ;;;###autoload
-(defun dispass (label &optional length)
+(defun dispass-create (label &optional length algo)
+  "Create a new password for LABEL."
+  (interactive (list
+                (read-from-minibuffer "Label: ")
+                current-prefix-arg
+                (completing-read "Algorithm: " dispass-algorithms)))
+  (let ((length (or length dispass-default-length)))
+    (dispass-start-process label t length algo)))
+
+;;;###autoload
+(defun dispass (label &optional length algo)
   "Recreate a password previously used."
   (interactive (list
                 (completing-read
-                 "Label: " (mapcar (lambda (elm) (elt elm 0))
-                                   (dispass-get-labels)))
+                 "Label: " (dispass-get-labels))
                 current-prefix-arg))
+  (if (called-interactively-p 'any)
+      (unless (member label (dispass-get-labels))
+        (setq algo (completing-read
+                         "Algorithm: " dispass-algorithms))))
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process label nil length)))
+    (dispass-start-process
+     label nil length algo
+     (when (member label (dispass-get-labels)) '("-s")))))
 
 ;; Labels management
 ;;;###autoload
@@ -177,10 +209,12 @@ an eye out for LABEL."
          (read-from-minibuffer
           (format "Length (%d): " dispass-default-length) nil nil t nil
           (number-to-string dispass-default-length))
-         (symbol-name (read-from-minibuffer
-                       "Algorithm (dispass1): " nil nil t nil "dispass1"))))
+         (completing-read
+          "Algorithm (dispass1): "
+          dispass-algorithms nil nil nil nil "dispass1")))
   (shell-command
-   (format "%s --add %s:%d:%s" dispass-labels-executable label length algo)))
+   (format "%s --add %s:%d:%s"
+           dispass-labels-executable label length algo)))
 
 ;;;###autoload
 (defun dispass-remove-label (label)
@@ -191,9 +225,7 @@ thrown."
   (interactive
    (list (or (dispass-label-at-point)
              (completing-read
-              "Label: " (mapcar (lambda (elm) (elt elm 0))
-                                (dispass-get-labels))))))
-
+              "Label: " (dispass-get-labels)))))
   (shell-command
    (format "%s --remove %s" dispass-labels-executable label)))
 
@@ -207,7 +239,7 @@ thrown."
   (setq tabulated-list-entries nil)
 
   (let ((tmp-list '()))
-    (setq tabulated-list-entries (dispass-get-labels))))
+    (setq tabulated-list-entries (dispass-get-labels-for-display))))
 
 (define-derived-mode dispass-labels-mode tabulated-list-mode "DisPass"
   "Major mode for listing dispass labels.
