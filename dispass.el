@@ -131,7 +131,7 @@ an eye out for LABEL."
 
     (when (and seqno (> seqno 0))
       (setq args (append `("-n" ,(number-to-string seqno)) args)))
-    (prin1 args)
+
     (setq proc (apply 'start-process "dispass" "*dispass*"
                       dispass-executable args))
     (set-process-sentinel proc 'dispass-process-sentinel)
