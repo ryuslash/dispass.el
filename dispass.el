@@ -53,6 +53,14 @@
   :type 'string
   :risky t)
 
+(defcustom dispass-labelfile nil
+  "The location of your preferred labelfile, a value of `nil'
+  means to just let DisPass figure it out."
+  :package-version '(dispass . "1.1.1")
+  :group 'dispass
+  :type 'file
+  :risky t)
+
 (defvar dispass-labels-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
@@ -132,6 +140,9 @@ an eye out for LABEL."
     (when (and seqno (> seqno 0))
       (setq args (append `("-n" ,(number-to-string seqno)) args)))
 
+    (when dispass-labelfile
+      (setq args (append `("-f" ,dispass-labelfile) args)))
+
     (setq proc (apply 'start-process "dispass" "*dispass*"
                       dispass-executable args))
     (set-process-sentinel proc 'dispass-process-sentinel)
@@ -175,7 +186,10 @@ an eye out for LABEL."
 (defun dispass-read-labels ()
   "Load a list of all labels into a buffer."
   (insert (shell-command-to-string
-           (concat dispass-labels-executable " -l --script")))
+           (concat dispass-labels-executable
+                   (when dispass-labelfile
+                     (concat " -f " dispass-labelfile))
+                   " -l --script")))
   (goto-char (point-min)))
 
 ;;;###autoload
@@ -221,8 +235,12 @@ an eye out for LABEL."
           dispass-algorithms nil nil nil nil "dispass1")
          (read-from-minibuffer "Sequnce no. (1): " nil nil t nil "1")))
   (shell-command
-   (format "%s --add %s:%d:%s:%s"
-           dispass-labels-executable label length algo seqno)))
+   (format "%s %s --add %s:%d:%s:%s"
+           dispass-labels-executable
+           (if dispass-labelfile
+               (concat "-f " dispass-labelfile)
+             "")
+           label length algo seqno)))
 
 ;;;###autoload
 (defun dispass-remove-label (label)
@@ -235,7 +253,11 @@ thrown."
              (completing-read
               "Label: " (dispass-get-labels)))))
   (shell-command
-   (format "%s --remove %s" dispass-labels-executable label)))
+   (format "%s %s --remove %s" dispass-labels-executable
+           (if dispass-labelfile
+               (concat "-f " dispass-labelfile)
+             "")
+           label)))
 
 (defun dispass-from-button (button)
   "Call dispass with information from BUTTON."
