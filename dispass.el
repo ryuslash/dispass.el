@@ -111,7 +111,8 @@ an eye out for LABEL."
                 (clipboard-kill-ring-save (point-min) (point-max))
                 (message "Password copied to clipboard.")))))))
 
-(defun dispass-start-process (label create length &optional algo args)
+(defun dispass-start-process (label create length
+                                    &optional algo seqno args)
   "Start dispass process.  When CREATE is non-nil send along the
   -c switch to make it ask for a password twice.  When LENGTH is
   an integer and greater than 0, send along the -l switch with
@@ -128,6 +129,9 @@ an eye out for LABEL."
                (member algo dispass-algorithms))
       (setq args (append `("-a" ,algo) args)))
 
+    (when (and seqno (> seqno 0))
+      (setq args (append `("-n" ,(number-to-string seqno)) args)))
+    (prin1 args)
     (setq proc (apply 'start-process "dispass" "*dispass*"
                       dispass-executable args))
     (set-process-sentinel proc 'dispass-process-sentinel)
@@ -175,34 +179,37 @@ an eye out for LABEL."
   (goto-char (point-min)))
 
 ;;;###autoload
-(defun dispass-create (label &optional length algo)
+(defun dispass-create (label &optional length algo seqno)
   "Create a new password for LABEL."
   (interactive (list
                 (read-from-minibuffer "Label: ")
                 current-prefix-arg
-                (completing-read "Algorithm: " dispass-algorithms)))
+                (completing-read "Algorithm: " dispass-algorithms)
+                (read-from-minibuffer
+                 "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process label t length algo)))
+    (dispass-start-process label t length algo seqno)))
 
 ;;;###autoload
-(defun dispass (label &optional length algo)
+(defun dispass (label &optional length algo seqno)
   "Recreate a password previously used."
   (interactive (list
                 (completing-read
                  "Label: " (dispass-get-labels))
                 current-prefix-arg))
-  (if (called-interactively-p 'any)
-      (unless (member label (dispass-get-labels))
-        (setq algo (completing-read
-                         "Algorithm: " dispass-algorithms))))
+  (when (and (called-interactively-p 'any)
+             (not (member label (dispass-get-labels))))
+    (setq algo (completing-read "Algorithm: " dispass-algorithms))
+    (setq seqno (read-from-minibuffer
+                 "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
     (dispass-start-process
-     label nil length algo
+     label nil length algo seqno
      (when (member label (dispass-get-labels)) '("-s")))))
 
 ;; Labels management
 ;;;###autoload
-(defun dispass-add-label (label length algo)
+(defun dispass-add-label (label length algo &optional seqno)
   "Add LABEL with length LENGTH and algorithm ALGO to DisPass."
   (interactive
    (list (read-from-minibuffer "Label: ")
@@ -211,10 +218,11 @@ an eye out for LABEL."
           (number-to-string dispass-default-length))
          (completing-read
           "Algorithm (dispass1): "
-          dispass-algorithms nil nil nil nil "dispass1")))
+          dispass-algorithms nil nil nil nil "dispass1")
+         (read-from-minibuffer "Sequnce no. (1): " nil nil t nil "1")))
   (shell-command
-   (format "%s --add %s:%d:%s"
-           dispass-labels-executable label length algo)))
+   (format "%s --add %s:%d:%s:%s"
+           dispass-labels-executable label length algo seqno)))
 
 ;;;###autoload
 (defun dispass-remove-label (label)
