@@ -64,7 +64,7 @@
        (div (@ (class "span6"))
             (h3 "Development version")
             "This version tries to follow the developments of "
-            ,($ 'dispass) " closely."))
+            ,($ 'dispass) " as closely as possible."))
   (div (@ (class "row"))
        (div (@ (class "span6"))
             (a (@ (href ,($ 'tar-gz))
