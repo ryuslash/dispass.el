@@ -1,0 +1,77 @@
+;; -*- mode: scheme; -*-
+((title . "dispass.el")
+ (dispass . (a (@ (href "http://dispass.babab.nl")) "DisPass"))
+ (emacs . (a (@ (href "http://gnu.org/software/emacs/")) "Emacs"))
+ (tar-gz . "")
+ (zip . "")
+ (dev-tar-gz
+  . "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/snapshot/dispass.el-master.tar.gz")
+ (dev-zip
+  . "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/snapshot/dispass.el-master.zip"))
+
+`((div (@ (class "page-header"))
+       (h1 ,($ 'title)
+           (small ", an " ,($ 'emacs) " wrapper for " ,($ 'dispass))))
+  (div (@ (class "hero-unit"))
+       (p ,($ 'dispass) " is a passphrase generator. dispass.el wraps "
+          "it into a nice interface for " ,($ 'emacs) ".")
+       (p "dispass.el tries to give easy access to each feature that "
+          ,($ 'dispass) " provides and any others that make sense with "
+          "an interface as awesome as " ,($ 'emacs))
+       (p "dispass.el is written for anyone who likes to use "
+          ,($ 'emacs) " over all alternatives. It is released under "
+          "the ISC license as a politeness to " ,($ 'dispass) ", and "
+          "to be completely, 100% compatible with it.")
+       (div (@ (class "row"))
+            (div (@ (class "span3 centered"))
+                 (h3 "Version")
+                 "Development")
+            (div (@ (class "span4 centered"))
+                 (h3 "Language")
+                 "Emacs Lisp")
+            (div (@ (class "span3 centered"))
+                 (h3 "Licence")
+                 "ISC")))
+  (div (@ (class "row"))
+       (div (@ (class "span6"))
+            (h2 "Features")
+            (ul
+             (li "Copies passphrases directly to the clipboard, no "
+                 "need for manual selection and copying.")
+             (li "Specify the length of the passphrase by using a "
+                 "numeric prefic argument.")
+             (li "Input completion for labels.")
+             (li "Some label management (listing, adding, removing).")))
+       (div (@ (class "span6"))
+            (h2 "Dependencies")
+            (dl
+             (dt ,($ 'emacs))
+             (dd "It has been developed with v24, but if it doesn't "
+                 "work in your version of " ,($ 'emacs) ", please let "
+                 "me know.")
+             (dt ,($ 'dispass))
+             (dd "The latest development version is required, but as "
+                 "soon as another version of " ,($ 'dispass) " is "
+                 "released, versions here will start mapping directly "
+                 "to " ,($ 'dispass) " versions."))))
+  (h2 "Download")
+  (div (@ (class "row"))
+       (div (@ (class "span6 centered"))
+            (h3 "Latest version")
+            (a (@ (href ,($ 'tar-gz))
+                  (class "btn btn-large btn-block disabled"))
+               "Download .tar.gz")
+            (a (@ (href ,($ 'zip))
+                  (class "btn btn-large btn-block disabled"))
+               "Download .zip"))
+       (div (@ (class "span6 centered"))
+            (h3 "Development version")
+            (a (@ (href ,($ 'dev-tar-gz))
+                  (class "btn btn-large btn-block"))
+               "Download .tar.gz")
+            (a (@ (href ,($ 'dev-zip))
+                  (class "btn btn-large btn-block"))
+               "Download .zip")))
+  (hr)
+  (h2 "More...")
+  (p "For more information please read the README."))
