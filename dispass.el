@@ -154,7 +154,7 @@ an eye out for LABEL."
     (with-temp-buffer
       (dispass-read-labels)
       (while (re-search-forward
-              "^\\(\\(?:\\sw\\|\\s_\\)+\\)"
+              "^\\(\\(?:\\sw\\|\\s_\\|\\.\\)+\\)"
               nil t)
         (add-to-list 'result (match-string 1)))
       result)))
@@ -165,7 +165,7 @@ an eye out for LABEL."
     (with-temp-buffer
       (dispass-read-labels)
       (while (re-search-forward
-              "^\\(\\(?:\\sw\\|\\s_\\)+\\) +\\([0-9]+\\) +\\(\\(?:\\sw\\|\\s_\\)+\\)"
+              "^\\(\\(?:\\sw\\|\\s_\\|\\.\\)+\\) +\\([0-9]+\\) +\\(\\(?:\\sw\\|\\s_\\)+\\)"
               nil t)
         (let ((label (match-string 1))
               (length (match-string 2))
