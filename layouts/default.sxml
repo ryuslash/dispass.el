@@ -2,6 +2,8 @@
 ((menu-items
   . (("Browse Source" .
       "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/")
+     ("Read News" .
+      "http://blog.ryuslash.org/tags/dispass.el")
      ("View README" .
       "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/about/")))
  (print-item
