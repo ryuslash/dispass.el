@@ -10,7 +10,7 @@
 
 `((div (@ (class "page-header"))
        (h1 ,($ 'title)
-           (small ", an " ,($ 'emacs) " wrapper for " ,($ 'dispass))))w
+           (small ", an " ,($ 'emacs) " wrapper for " ,($ 'dispass))))
   (div (@ (class "hero-unit"))
        (p ,($ 'dispass) " is a passphrase generator. dispass.el wraps "
           "it into a nice interface for " ,($ 'emacs) ".")
