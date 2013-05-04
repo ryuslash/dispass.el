@@ -8,6 +8,8 @@
   - Simplify ~dispass-add-label~ and ~dispass-remove-label~ by deferring
     their functionality to the ~dispass-label~ executable.
 
+  - Fix some style warnings for various docstrings.
+
 * Changes in v1.1.1
 
   - Clean up the output from DisPass when prompting, trim whitespace

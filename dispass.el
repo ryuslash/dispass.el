@@ -6,7 +6,7 @@
 ;; Created: Jun 8, 2012
 ;; Version: 1.1.1
 ;; Keywords: processes
-;; URL: http://ryuslash.org/projects/dispass.el.html
+;; URL: http://projects.ryuslash.org/dispass.el/
 
 ;; Permission to use, copy, modify, and distribute this software for any
 ;; purpose with or without fee is hereby granted, provided that the
@@ -24,11 +24,14 @@
 
 ;;; Commentary:
 
-;; dispass.el is an emacs wrapper around DisPass
+;; dispass.el is an Emacs wrapper around DisPass
 ;; (http://dispass.babab.nl).  For more information see the README.org
 ;; and NEWS files.
 
+;; This version is written for use with DisPass v0.2.0.
+
 ;;; Code:
+
 (defgroup dispass nil
   "Customization options for the DisPass wrapper."
   :group 'external)
@@ -54,8 +57,9 @@
   :risky t)
 
 (defcustom dispass-labelfile nil
-  "The location of your preferred labelfile, a value of `nil'
-  means to just let DisPass figure it out."
+  "The location of your preferred labelfile.
+
+A value of nil means to just let DisPass figure it out."
   :package-version '(dispass . "1.1.1")
   :group 'dispass
   :type 'file
@@ -68,13 +72,14 @@
     (define-key map "a" 'dispass-add-label)
     (define-key map "d" 'dispass-remove-label)
     map)
-  "Keymap for `dispass-labels-mode', uses
-  `tabulated-list-mode-map' as its parent.")
+  "Keymap for `dispass-labels-mode'.
 
+Uses `tabulated-list-mode-map' as its parent.")
+
+;; This should be extracted from DisPass at some point.
 (defconst dispass-algorithms
   '("dispass1" "dispass2")
-  "The list of algorithms supported by DisPass, this should be
-  extracted from DisPass at some point.")
+  "The list of algorithms supported by DisPass.")
 
 (defun dispass-process-sentinel (proc status)
   "Report PROC's status change to STATUS."
@@ -87,7 +92,7 @@
       (kill-buffer buffer))))
 
 (defun dispass-erase-buffer (buffer)
-  "Completely erase the contents of BUFFER"
+  "Completely erase the contents of BUFFER."
   (save-current-buffer
     (set-buffer buffer)
     (buffer-disable-undo buffer)
@@ -99,8 +104,11 @@
     (tabulated-list-get-id)))
 
 (defun dispass-process-filter-for (label)
-  "Create a function that will process any lines whilst keeping
-an eye out for LABEL."
+  "Create a specialized filter for LABEL.
+
+This filter checks if a password has been asked for or if the
+label shows up in a line, which will be the line with the
+passphrase that has been generated."
   `(lambda (proc string)
      "Process STRING coming from PROC."
      (cond ((string-match "^\\(Password[^:]*\\|Again\\): ?$" string)
@@ -121,10 +129,16 @@ an eye out for LABEL."
 
 (defun dispass-start-process (label create length
                                     &optional algo seqno args)
-  "Start dispass process.  When CREATE is non-nil send along the
-  -c switch to make it ask for a password twice.  When LENGTH is
-  an integer and greater than 0, send along the -l switch with
-  LENGTH."
+  "Ask DisPass to generate a passphrase for LABEL.
+
+When CREATE is non-nil send along the -c switch to make it ask
+for a password twice.  When LENGTH is an integer and greater than
+0, we request that DisPass make the passphrase LENGTH long.  ALGO
+should be one of `dispass-algorithms' and requests a certain
+algorithm be used by DisPass to generate the passphrase.  SEQNO
+asks DisPass to use SEQNO as a sequence number.
+
+If specified add ARGS to the command."
   (let ((args `("-o" ,@args ,label))
         proc)
     (when create
@@ -194,7 +208,10 @@ an eye out for LABEL."
 
 ;;;###autoload
 (defun dispass-create (label &optional length algo seqno)
-  "Create a new password for LABEL."
+  "Create a new password for LABEL.
+
+Optionally also specify to make the passphrase LENGTH long, use
+the ALGO algorithm with sequence number SEQNO."
   (interactive (list
                 (read-from-minibuffer "Label: ")
                 current-prefix-arg
@@ -206,7 +223,12 @@ an eye out for LABEL."
 
 ;;;###autoload
 (defun dispass (label &optional length algo seqno)
-  "Recreate a password previously used."
+  "Recreate a passphrase for LABEL.
+
+Optionally also specify to make the passphrase LENGTH long, use
+the ALGO algorithm with sequence number SEQNO.  This is useful
+when you would like to generate a one-shot passphrase, or prefer
+not to have LABEL added to your labelfile for some other reason."
   (interactive (list
                 (completing-read
                  "Label: " (dispass-get-labels))
@@ -224,7 +246,9 @@ an eye out for LABEL."
 ;; Labels management
 ;;;###autoload
 (defun dispass-add-label (label length algo &optional seqno)
-  "Add LABEL with length LENGTH and algorithm ALGO to DisPass."
+  "Add LABEL with length LENGTH and algorithm ALGO to DisPass.
+
+Optionally also specify sequence number SEQNO."
   (interactive
    (list (read-from-minibuffer "Label: ")
          (read-from-minibuffer
@@ -244,10 +268,11 @@ an eye out for LABEL."
 
 ;;;###autoload
 (defun dispass-remove-label (label)
-  "Remove LABEL from DisPass, if LABEL is not given
-`tabulated-list-get-id' will be used to get the currently
-pointed-at label. If neither LABEL is not found an error is
-thrown."
+  "Remove LABEL from DisPass.
+
+If LABEL is not given `tabulated-list-get-id' will be used to get
+the currently pointed-at label.  If neither LABEL is not found an
+error is thrown."
   (interactive
    (list (or (dispass-label-at-point)
              (completing-read
@@ -298,3 +323,7 @@ thrown."
 (provide 'dispass)
 
 ;;; dispass.el ends here
+
+;; Local Variables:
+;; sentence-end-double-space: t
+;; End:
