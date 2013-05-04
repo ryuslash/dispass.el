@@ -4,7 +4,7 @@
 
 ;; Author: Tom Willemsen <tom@ryuslash.org>
 ;; Created: Jun 8, 2012
-;; Version: 1.1.1
+;; Version: 1.1.2
 ;; Keywords: processes
 ;; URL: http://projects.ryuslash.org/dispass.el/
 
