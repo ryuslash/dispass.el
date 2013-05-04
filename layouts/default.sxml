@@ -1,11 +1,11 @@
 ;; -*- mode: scheme; -*-
 ((menu-items
   . (("Browse Source" .
-      "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/")
+      "http://code.ryuslash.org/cgit.cgi/dispass.el/")
      ("Read News" .
       "http://blog.ryuslash.org/tags/dispass.el")
      ("View README" .
-      "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/about/")))
+      "http://code.ryuslash.org/cgit.cgi/dispass.el/about/")))
  (print-item
   . (lambda (mnu)
       `(li (a (@ (href ,(cdr mnu))) ,(car mnu))))))

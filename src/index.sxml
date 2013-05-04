@@ -2,16 +2,15 @@
 ((title . "dispass.el")
  (dispass . (a (@ (href "http://dispass.babab.nl")) "DisPass"))
  (emacs . (a (@ (href "http://gnu.org/software/emacs/")) "Emacs"))
- (tar-gz . "")
- (zip . "")
- (dev-tar-gz
-  . "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/snapshot/dispass.el-master.tar.gz")
- (dev-zip
-  . "http://code.ryuslash.org/cgit.cgi/emacs/dispass.el/snapshot/dispass.el-master.zip"))
+ (tar-gz . "http://code.ryuslash.org/cgit.cgi/dispass.el/snapshot/dispass.el-1.1.2.tar.gz")
+ (zip . "http://code.ryuslash.org/cgit.cgi/dispass.el/snapshot/dispass.el-1.1.2.zip")
+ (dev-tar-gz . "http://code.ryuslash.org/cgit.cgi/dispass.el/snapshot/dispass.el-master.tar.gz")
+ (dev-zip . "http://code.ryuslash.org/cgit.cgi/dispass.el/snapshot/dispass.el-master.zip")
+ (version . "1.1.2"))
 
 `((div (@ (class "page-header"))
        (h1 ,($ 'title)
-           (small ", an " ,($ 'emacs) " wrapper for " ,($ 'dispass))))
+           (small ", an " ,($ 'emacs) " wrapper for " ,($ 'dispass))))w
   (div (@ (class "hero-unit"))
        (p ,($ 'dispass) " is a passphrase generator. dispass.el wraps "
           "it into a nice interface for " ,($ 'emacs) ".")
@@ -25,7 +24,7 @@
        (div (@ (class "row"))
             (div (@ (class "span3 centered"))
                  (h3 "Version")
-                 "Development")
+                 ,($ 'version))
             (div (@ (class "span4 centered"))
                  (h3 "Language")
                  "Emacs Lisp")
@@ -50,10 +49,7 @@
                  "work in your version of " ,($ 'emacs) ", please let "
                  "me know.")
              (dt ,($ 'dispass))
-             (dd "The latest development version is required, but as "
-                 "soon as another version of " ,($ 'dispass) " is "
-                 "released, versions here will start mapping directly "
-                 "to " ,($ 'dispass) " versions."))))
+             (dd "Version 0.2.0 is required for this release."))))
   (h2 "Download")
   (div (@ (class "row"))
        (div (@ (class "span6"))
@@ -68,18 +64,18 @@
   (div (@ (class "row"))
        (div (@ (class "span6"))
             (a (@ (href ,($ 'tar-gz))
-                  (class "btn btn-large btn-block disabled"))
-               "Download .tar.gz")
+                  (class "btn btn-large btn-block"))
+               "Download " ,($ 'version) ".tar.gz")
             (a (@ (href ,($ 'zip))
-                  (class "btn btn-large btn-block disabled"))
-               "Download .zip"))
+                  (class "btn btn-large btn-block"))
+               "Download " ,($ 'version) ".zip"))
        (div (@ (class "span6"))
             (a (@ (href ,($ 'dev-tar-gz))
                   (class "btn btn-large btn-block"))
-               "Download .tar.gz")
+               "Download master.tar.gz")
             (a (@ (href ,($ 'dev-zip))
                   (class "btn btn-large btn-block"))
-               "Download .zip")))
+               "Download master.zip")))
   (hr)
   (h2 "More...")
   (p "For more information please read the README."))
