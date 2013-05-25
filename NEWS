@@ -2,6 +2,16 @@
 
 * Changes since
 
+  - Use the new style of calling DisPass. DisPass has switched from
+    using several executables with many switches to a command-based
+    interface.
+
+  - Make the =dispass-labels-executable= obsolete, since it is nog
+    longer provided by DisPass, all its functionality has been moved
+    into the ~dispass~ executable. Also set it's default value to =nil=.
+
+* Changes in v1.1.2
+
   - Change the description to emphasize the idea that ~dispass.el~ is
     only a wrapper around DisPass.
 

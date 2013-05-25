@@ -49,12 +49,15 @@
   :type '(string)
   :risky t)
 
-(defcustom dispass-labels-executable "dispass-label"
+(defcustom dispass-labels-executable nil
   "The location of the dispass-label executable."
-  :package-version '(dispass . "1.1")
+  :package-version '(dispass . "1.1.3")
   :group 'dispass
   :type 'string
   :risky t)
+(make-obsolete-variable 'dispass-labels-executable
+                        "dispass-label is no longer used by DisPass."
+                        "dispass 1.1.3")
 
 (defcustom dispass-labelfile nil
   "The location of your preferred labelfile.
@@ -127,9 +130,9 @@ passphrase that has been generated."
                 (clipboard-kill-ring-save (point-min) (point-max))
                 (message "Password copied to clipboard.")))))))
 
-(defun dispass-start-process (label create length
-                                    &optional algo seqno args)
-  "Ask DisPass to generate a passphrase for LABEL.
+(defun dispass-start-process (cmd label create length
+                                  &optional algo seqno args)
+  "Ask DisPass call CMD for LABEL.
 
 When CREATE is non-nil send along the -c switch to make it ask
 for a password twice.  When LENGTH is an integer and greater than
@@ -139,26 +142,27 @@ algorithm be used by DisPass to generate the passphrase.  SEQNO
 asks DisPass to use SEQNO as a sequence number.
 
 If specified add ARGS to the command."
-  (let ((args `("-o" ,@args ,label))
+  (let ((args `(,cmd ,@args "-o"))
         proc)
     (when create
-      (setq args (append '("-c") args)))
+      (setq args (append args '("-v"))))
 
     (when (and (integerp length) (> length 0))
-      (setq args (append `("-l" ,(number-to-string length)) args)))
+      (setq args (append args `("-l" ,(number-to-string length)))))
 
     (when (and algo (not (equal algo ""))
                (member algo dispass-algorithms))
-      (setq args (append `("-a" ,algo) args)))
+      (setq args (append args `("-a" ,algo))))
 
     (when (and seqno (> seqno 0))
-      (setq args (append `("-n" ,(number-to-string seqno)) args)))
+      (setq args (append args `("-s" ,(number-to-string seqno)))))
 
     (when dispass-labelfile
       (setq args (append `("-f" ,dispass-labelfile) args)))
 
+    (message "%s" `(,@args ,label))
     (setq proc (apply 'start-process "dispass" "*dispass*"
-                      dispass-executable args))
+                      dispass-executable `(,@args ,label)))
     (set-process-sentinel proc 'dispass-process-sentinel)
     (set-process-filter proc (dispass-process-filter-for label))))
 
@@ -200,10 +204,10 @@ If specified add ARGS to the command."
 (defun dispass-read-labels ()
   "Load a list of all labels into a buffer."
   (insert (shell-command-to-string
-           (concat dispass-labels-executable
+           (concat dispass-executable
                    (when dispass-labelfile
                      (concat " -f " dispass-labelfile))
-                   " -l --script")))
+                   " list --script")))
   (goto-char (point-min)))
 
 ;;;###autoload
@@ -219,7 +223,7 @@ the ALGO algorithm with sequence number SEQNO."
                 (read-from-minibuffer
                  "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process label t length algo seqno)))
+    (dispass-start-process "generate" label t length algo seqno)))
 
 ;;;###autoload
 (defun dispass (label &optional length algo seqno)
@@ -240,8 +244,7 @@ not to have LABEL added to your labelfile for some other reason."
                  "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
     (dispass-start-process
-     label nil length algo seqno
-     (when (member label (dispass-get-labels)) '("-s")))))
+     "generate" label nil length algo seqno)))
 
 ;; Labels management
 ;;;###autoload
@@ -259,8 +262,8 @@ Optionally also specify sequence number SEQNO."
           dispass-algorithms nil nil nil nil "dispass1")
          (read-from-minibuffer "Sequnce no. (1): " nil nil t nil "1")))
   (shell-command
-   (format "%s %s --add %s:%d:%s:%s"
-           dispass-labels-executable
+   (format "%s %s add %s:%d:%s:%s"
+           dispass-executable
            (if dispass-labelfile
                (concat "-f " dispass-labelfile)
              "")
@@ -278,7 +281,7 @@ error is thrown."
              (completing-read
               "Label: " (dispass-get-labels)))))
   (shell-command
-   (format "%s %s --remove %s" dispass-labels-executable
+   (format "%s %s rm %s" dispass-executable
            (if dispass-labelfile
                (concat "-f " dispass-labelfile)
              "")
