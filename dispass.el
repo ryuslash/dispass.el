@@ -7,6 +7,7 @@
 ;; Version: 1.1.2
 ;; Keywords: processes
 ;; URL: http://projects.ryuslash.org/dispass.el/
+;; Package-Requires: ((dash "1.0.0"))
 
 ;; Permission to use, copy, modify, and distribute this software for any
 ;; purpose with or without fee is hereby granted, provided that the
@@ -31,6 +32,8 @@
 ;; This version is written for use with DisPass v0.2.0.
 
 ;;; Code:
+
+(require 'dash)
 
 (defgroup dispass nil
   "Customization options for the DisPass wrapper."
@@ -84,55 +87,20 @@ Uses `tabulated-list-mode-map' as its parent.")
   '("dispass1" "dispass2")
   "The list of algorithms supported by DisPass.")
 
-(defun dispass-process-sentinel (proc status)
-  "Report PROC's status change to STATUS."
-  (let ((status (substring status 0 -1))
-        (buffer (process-buffer proc)))
-    (unless (string-equal status "finished")
-      (message "dispass %s" status))
-
-    (unless (eq (current-buffer) proc)
-      (kill-buffer buffer))))
-
-(defun dispass-erase-buffer (buffer)
-  "Completely erase the contents of BUFFER."
-  (save-current-buffer
-    (set-buffer buffer)
-    (buffer-disable-undo buffer)
-    (kill-buffer buffer)))
-
 (defun dispass-label-at-point ()
   "When in `dispass-labels-mode', get the label at `point'."
   (let ((labels-mode-p (eq major-mode 'dispass-labels-mode)))
     (tabulated-list-get-id)))
 
-(defun dispass-process-filter-for (label)
-  "Create a specialized filter for LABEL.
+(defun dispass--get-passphrase-matcher (label)
+  "Return a function that will get the passphrase for LABEL."
+  `(lambda (output)
+     (string-match ,(concat "^[ \t]*" label "[ \t]*\\(.+\\)$") output)
+     (substring output (match-beginning 1) (match-end 1))))
 
-This filter checks if a password has been asked for or if the
-label shows up in a line, which will be the line with the
-passphrase that has been generated."
-  `(lambda (proc string)
-     "Process STRING coming from PROC."
-     (cond ((string-match "^\\(Password[^:]*\\|Again\\): ?$" string)
-            (process-send-string
-             proc
-             (concat (read-passwd
-                      (concat (replace-regexp-in-string
-                               "^[ \t\n]+\\|[ \t\n]+$" "" string) " ")
-                      nil) "\n")))
-
-           ((string-match (concat "^[ \t]*" ,label "[ \t]*\\(.+\\)$")
-                          string)
-            (let ((buffer (process-buffer proc)))
-              (with-current-buffer buffer
-                (insert (match-string 1 string))
-                (clipboard-kill-ring-save (point-min) (point-max))
-                (message "Password copied to clipboard.")))))))
-
-(defun dispass-start-process (cmd label create length
+(defun dispass-start-process (cmd label pass create length
                                   &optional algo seqno args)
-  "Ask DisPass call CMD for LABEL.
+  "Ask DisPass call CMD for LABEL and PASS.
 
 When CREATE is non-nil send along the -c switch to make it ask
 for a password twice.  When LENGTH is an integer and greater than
@@ -142,7 +110,7 @@ algorithm be used by DisPass to generate the passphrase.  SEQNO
 asks DisPass to use SEQNO as a sequence number.
 
 If specified add ARGS to the command."
-  (let ((args `(,cmd ,@args "-o"))
+  (let ((args `(,cmd ,@args "-o" "-p" ,pass))
         proc)
     (when create
       (setq args (append args '("-v"))))
@@ -160,11 +128,9 @@ If specified add ARGS to the command."
     (when dispass-labelfile
       (setq args (append `("-f" ,dispass-labelfile) args)))
 
-    (message "%s" `(,@args ,label))
-    (setq proc (apply 'start-process "dispass" "*dispass*"
-                      dispass-executable `(,@args ,label)))
-    (set-process-sentinel proc 'dispass-process-sentinel)
-    (set-process-filter proc (dispass-process-filter-for label))))
+    (shell-command-to-string
+     (apply #'concat
+            (-interpose " " `(,dispass-executable ,@args ,label))))))
 
 (defun dispass-get-labels ()
   "Get the list of labels and their information."
@@ -210,24 +176,45 @@ If specified add ARGS to the command."
                    " list --script")))
   (goto-char (point-min)))
 
+(defun dispass--verified-password ()
+  "Ask for and verify a password."
+  (let ((passwd (read-passwd "Password: ")))
+    (if (and (equal passwd (read-passwd "Password (again): ")))
+        passwd
+      (error "Passwords don't match"))))
+
+(defun dispass--generate (label pass create length algo seqno)
+  "Call `dispass-start-process' to generate a passphrase.
+
+The LABEL, PASS, CREATE, LENGTH, ALGO and SEQNO arguments have
+the same meanings as when passed to `dispass-start-process'.
+
+The result is put in the `kill-ring'."
+  (kill-new
+   (funcall (dispass--get-passphrase-matcher label)
+            (dispass-start-process "generate" label pass create length
+                                   algo seqno)))
+  (message "Passphrase copied to kill ring"))
+
 ;;;###autoload
-(defun dispass-create (label &optional length algo seqno)
-  "Create a new password for LABEL.
+(defun dispass-create (label pass &optional length algo seqno)
+  "Create a new password for LABEL using PASS.
 
 Optionally also specify to make the passphrase LENGTH long, use
 the ALGO algorithm with sequence number SEQNO."
   (interactive (list
                 (read-from-minibuffer "Label: ")
+                (dispass--verified-password)
                 current-prefix-arg
                 (completing-read "Algorithm: " dispass-algorithms)
                 (read-from-minibuffer
                  "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process "generate" label t length algo seqno)))
+    (dispass--generate label pass t length algo seqno)))
 
 ;;;###autoload
-(defun dispass (label &optional length algo seqno)
-  "Recreate a passphrase for LABEL.
+(defun dispass (label pass &optional length algo seqno)
+  "Recreate a passphrase for LABEL using PASS.
 
 Optionally also specify to make the passphrase LENGTH long, use
 the ALGO algorithm with sequence number SEQNO.  This is useful
@@ -236,6 +223,7 @@ not to have LABEL added to your labelfile for some other reason."
   (interactive (list
                 (completing-read
                  "Label: " (dispass-get-labels))
+                (read-passwd "Password: ")
                 current-prefix-arg))
   (when (and (called-interactively-p 'any)
              (not (member label (dispass-get-labels))))
@@ -243,8 +231,7 @@ not to have LABEL added to your labelfile for some other reason."
     (setq seqno (read-from-minibuffer
                  "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
-    (dispass-start-process
-     "generate" label nil length algo seqno)))
+    (dispass--generate label pass nil length algo seqno)))
 
 ;; Labels management
 ;;;###autoload
