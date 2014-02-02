@@ -215,6 +215,37 @@ the ALGO algorithm with sequence number SEQNO."
   (let ((length (or length dispass-default-length)))
     (dispass--copy (dispass--generate label pass t length algo seqno))))
 
+(defun dispass--interactive-spec ()
+  "Return an interactive specification.
+
+This specification is for use with any functions based on the
+`dispass--get-phrase' function."
+  (list (completing-read "Label: " (dispass-get-labels))
+        (read-passwd "Password: ")
+        current-prefix-arg))
+
+(defun dispass--get-phrase
+    (label pass interactivep &optional length algo seqno)
+  "Get a passphrase either by using the label file or asking for info.
+
+LABEL is a string indicating a label (possibly in the label
+file).  PASS is the password to use to generate the passphrase.
+INTERACTIVEP is an indication of whether its invoker was called
+interactively or not.  LENGTH is the requested length of the
+generated passphrase.  ALGO is the algrithm to use to generate
+the passphrase.  SEQNO is the sequence number to use when
+generating the passphrase.
+
+LENGTH, ALGO and SEQNO are not important if LABEL was found in
+the labels file."
+  (when (and interactivep
+             (not (member label (dispass-get-labels))))
+    (setq algo (completing-read "Algorithm: " dispass-algorithms))
+    (setq seqno (read-from-minibuffer
+                 "Sequence no. (1): " nil nil t nil "1")))
+  (let ((length (or length dispass-default-length)))
+    (dispass--generate label pass nil length algo seqno)))
+
 ;;;###autoload
 (defun dispass (label pass &optional length algo seqno)
   "Recreate a passphrase for LABEL using PASS.
@@ -223,18 +254,23 @@ Optionally also specify to make the passphrase LENGTH long, use
 the ALGO algorithm with sequence number SEQNO.  This is useful
 when you would like to generate a one-shot passphrase, or prefer
 not to have LABEL added to your labelfile for some other reason."
-  (interactive (list
-                (completing-read
-                 "Label: " (dispass-get-labels))
-                (read-passwd "Password: ")
-                current-prefix-arg))
-  (when (and (called-interactively-p 'any)
-             (not (member label (dispass-get-labels))))
-    (setq algo (completing-read "Algorithm: " dispass-algorithms))
-    (setq seqno (read-from-minibuffer
-                 "Sequence no. (1): " nil nil t nil "1")))
-  (let ((length (or length dispass-default-length)))
-    (dispass-copy (dispass--generate label pass nil length algo seqno))))
+  (interactive (dispass--interactive-spec))
+  (dispass--copy
+   (dispass--get-phrase
+    label pass (called-interactively-p 'any) length algo seqno)))
+
+;;;###autoload
+(defun dispass-insert (label pass &optional length algo seqno)
+  "Recreate a passphrase for LABEL using PASS.
+
+This command does the exact same thing as `dispass', except it
+inserts the results in the current buffer instead of copying them
+into the `kill-ring' (and clipboard).  LABEL, PASS, LENGTH, ALGO
+and SEQNO are directly passed on to `dispass--get-phrase'."
+  (interactive (dispass--interactive-spec))
+  (insert
+   (dispass--get-phrase
+    label pass (called-interactively-p 'any) length algo seqno)))
 
 ;; Labels management
 ;;;###autoload
