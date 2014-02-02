@@ -190,10 +190,13 @@ The LABEL, PASS, CREATE, LENGTH, ALGO and SEQNO arguments have
 the same meanings as when passed to `dispass-start-process'.
 
 The result is put in the `kill-ring'."
-  (kill-new
-   (funcall (dispass--get-passphrase-matcher label)
-            (dispass-start-process "generate" label pass create length
-                                   algo seqno)))
+  (funcall (dispass--get-passphrase-matcher label)
+           (dispass-start-process "generate" label pass create length
+                                  algo seqno)))
+
+(defun dispass--copy (str)
+  "Put STR in the `kill-ring'."
+  (kill-new str)
   (message "Passphrase copied to kill ring"))
 
 ;;;###autoload
@@ -210,7 +213,7 @@ the ALGO algorithm with sequence number SEQNO."
                 (read-from-minibuffer
                  "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
-    (dispass--generate label pass t length algo seqno)))
+    (dispass--copy (dispass--generate label pass t length algo seqno))))
 
 ;;;###autoload
 (defun dispass (label pass &optional length algo seqno)
@@ -231,7 +234,7 @@ not to have LABEL added to your labelfile for some other reason."
     (setq seqno (read-from-minibuffer
                  "Sequence no. (1): " nil nil t nil "1")))
   (let ((length (or length dispass-default-length)))
-    (dispass--generate label pass nil length algo seqno)))
+    (dispass-copy (dispass--generate label pass nil length algo seqno))))
 
 ;; Labels management
 ;;;###autoload
